@@ -81,7 +81,7 @@ class Timidity extends EventEmitter {
     this.emit('_ready')
   }
 
-  async load (urlOrBuf) {
+  async load (urlOrBuf, playbackRate=1) {
     debug('load %o', urlOrBuf)
     if (this.destroyed) throw new Error('load() called after destroy()')
 
@@ -114,7 +114,7 @@ class Timidity extends EventEmitter {
       throw new Error('load() expects a `string` or `Uint8Array` argument')
     }
 
-    let songPtr = this._loadSong(midiBuf)
+    let songPtr = this._loadSong(midiBuf, playbackRate)
 
     // Are we missing instrument files?
     let missingCount = this._lib._mid_get_load_request_count(songPtr)
@@ -132,7 +132,7 @@ class Timidity extends EventEmitter {
 
       // Retry the song load, now that instruments have been loaded
       this._lib._mid_song_free(songPtr)
-      songPtr = this._loadSong(midiBuf)
+      songPtr = this._loadSong(midiBuf, playbackRate)
 
       // Are we STILL missing instrument files? Then our General MIDI soundset
       // is probably missing instrument files.
@@ -160,9 +160,9 @@ class Timidity extends EventEmitter {
     return missingInstruments
   }
 
-  _loadSong (midiBuf) {
+  _loadSong (midiBuf, playbackRate) {
     const optsPtr = this._lib._mid_alloc_options(
-      SAMPLE_RATE,
+      Math.ceil(SAMPLE_RATE / playbackRate),
       AUDIO_FORMAT,
       NUM_CHANNELS,
       BUFFER_SIZE
