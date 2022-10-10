@@ -13,11 +13,11 @@ const TIMIDITY_CFG = fs.readFileSync(
   'utf8'
 )
 
-const SAMPLE_RATE = 44100
+const DEFAULT_SAMPLE_RATE = 44100
 const AUDIO_FORMAT = 0x8010 // format of the rendered audio 's16'
 const NUM_CHANNELS = 2 // stereo (2 channels)
 const BYTES_PER_SAMPLE = 2 * NUM_CHANNELS
-const BUFFER_SIZE = 16384 // buffer size for each render() call
+const BUFFER_SIZE = 1024 // buffer size for each render() call
 
 const AudioContext = typeof window !== 'undefined' &&
   (window.AudioContext || window.webkitAudioContext)
@@ -161,8 +161,9 @@ class Timidity extends EventEmitter {
   }
 
   _loadSong (midiBuf, playbackRate) {
+    let sampleRate = this._audioContext.sampleRate || DEFAULT_SAMPLE_RATE;
     const optsPtr = this._lib._mid_alloc_options(
-      Math.ceil(SAMPLE_RATE / playbackRate),
+      Math.ceil(sampleRate / playbackRate),
       AUDIO_FORMAT,
       NUM_CHANNELS,
       BUFFER_SIZE
